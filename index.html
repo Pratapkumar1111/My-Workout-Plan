@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Personal Workout Plan</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #050505;
+            --surface: #121212;
+            --surface-light: #1e1e1e;
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.3);
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+            --success: #00ff88;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .app-header {
+            padding: 24px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass);
+        }
+
+        .day-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--accent-glow);
+            color: var(--accent);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .focus-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff, var(--text-dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mobility-tray {
+            margin: 10px 20px;
+            background: var(--surface);
+            border: 1px solid var(--glass);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .section-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .mob-link {
+            background: var(--surface-light);
+            padding: 10px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #fff;
+            font-size: 0.75rem;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: 0.3s;
+        }
+
+        .workout-feed { padding: 10px 20px 120px 20px; }
+
+        .group-header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin: 24px 0 12px 0;
+            padding-left: 10px;
+            font-weight: 800;
+            border-left: 3px solid var(--accent);
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            margin-bottom: 10px;
+            border: 1px solid var(--glass);
+            transition: 0.2s ease;
+            cursor: pointer;
+        }
+
+        .card.done { border-color: var(--success); opacity: 0.5; }
+
+        .card-body { 
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ex-info { flex: 1; }
+        .ex-name { font-weight: 700; font-size: 1rem; margin-bottom: 2px; display: block; }
+        .ex-sets { color: var(--text-dim); font-size: 0.8rem; }
+
+        .check-wrapper {
+            width: 28px; height: 28px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+
+        .done .check-wrapper { background: var(--success); border-color: var(--success); }
+        .check-wrapper::after { content: '✓'; color: transparent; font-size: 14px; font-weight: 900; }
+        .done .check-wrapper::after { color: #000; }
+
+        /* Modal Redesign */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .modal.open { display: flex; }
+
+        .modal-content {
+            width: 100%;
+            max-width: 600px;
+            background: var(--surface);
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .video-container {
+            width: 100%;
+            padding-bottom: 56.25%;
+            height: 0;
+            position: relative;
+            background: #000;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%; border: 0;
+        }
+
+        .modal-body { padding: 24px; }
+
+        .image-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .img-box {
+            background: var(--surface-light);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--glass);
+        }
+
+        .img-box img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .img-label {
+            font-size: 0.65rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            padding: 6px;
+            text-align: center;
+            font-weight: 800;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .modal-desc { color: var(--text-dim); line-height: 1.6; margin-bottom: 24px; font-size: 0.95rem; }
+
+        .step-item { display: flex; gap: 12px; margin-bottom: 12px; }
+        .step-num { 
+            background: var(--accent); color: #000; 
+            width: 20px; height: 20px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 0.7rem; font-weight: 900; flex-shrink: 0;
+        }
+
+        .modal-close {
+            position: fixed;
+            top: 15px; right: 15px;
+            background: #fff;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #000; font-weight: bold; cursor: pointer; z-index: 2100;
+        }
+
+        /* Nav Bar Icons */
+        .nav-bar {
+            position: fixed;
+            bottom: 20px; left: 15px; right: 15px;
+            height: 75px;
+            background: rgba(18, 18, 18, 0.85);
+            backdrop-filter: blur(25px);
+            border-radius: 24px;
+            display: flex;
+            border: 1px solid var(--glass);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            z-index: 1001;
+        }
+
+        .nav-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            transition: 0.3s;
+            gap: 4px;
+        }
+
+        .nav-btn.active { color: var(--accent); }
+        .nav-btn span { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; }
+
+        .rest-day { text-align: center; padding: 100px 20px; color: var(--text-dim); }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header class="app-header">
+        <div class="day-badge" id="dayLabel">Today</div>
+        <div class="focus-title" id="focusArea">Hypertrophy Framework</div>
+    </header>
+
+    <div class="mobility-tray">
+        <div class="section-label">
+            <i data-lucide="zap" style="width: 14px; color: var(--accent)"></i>
+            DAILY MOBILITY RITUAL
+        </div>
+        <div class="links-grid">
+            <a href="https://www.youtube.com/shorts/-MwcpyRtqTw" target="_blank" class="mob-link">Cat-Camel</a>
+            <a href="https://www.youtube.com/watch?v=5cRbDPWavhl" target="_blank" class="mob-link">Hip Bridges</a>
+            <a href="https://www.youtube.com/shorts/zCPyu1TG8ws" target="_blank" class="mob-link">Pec Minor</a>
+            <a href="https://www.youtube.com/shorts/MIE5FE99txA" target="_blank" class="mob-link">Hand Opener</a>
+        </div>
+    </div>
+
+    <main class="workout-feed" id="feed"></main>
+
+    <div class="modal" id="videoModal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeModal()">✕</div>
+            <div class="video-container" id="videoWrapper"></div>
+            <div class="modal-body" id="modalDetails"></div>
+        </div>
+    </div>
+
+    <nav class="nav-bar">
+        <div class="nav-btn" onclick="render(0)">
+            <i data-lucide="arrow-down-circle"></i>
+            <span>Pull</span>
+        </div>
+        <div class="nav-btn" onclick="render(1)">
+            <i data-lucide="arrow-up-circle"></i>
+            <span>Push</span>
+        </div>
+        <div class="nav-btn" onclick="render(2)">
+            <i data-lucide="dumbbell"></i>
+            <span>Base</span>
+        </div>
+        <div class="nav-btn" onclick="render(6)">
+            <i data-lucide="moon"></i>
+            <span>Rest</span>
+        </div>
+    </nav>
+</div>
+
+<script>
+    // THE ORIGINAL WORKOUT DATA PRESERVED EXACTLY
+    const data = [
+        {
+            day: "Back, Biceps & Abs",
+            focus: "Pulling Power & Core",
+            groups: [
+                {
+                    name: "Back",
+                    exs: [
+                        { n: "Lat Pulldown (Wide)", s: "3 x 8-12", v: "Rpjf4vN3-gY", d: "A vertical pulling exercise that targets the latissimus dorsi to create back width.", m: "Lat Pulldown Machine", steps: ["Sit with thighs under pads", "Grip bar wide", "Pull to upper chest", "Control the rise"] },
+                        { n: "Seated Cable Row", s: "3 x 8-12", v: "GZbfZ033f74", d: "Horizontal pull focusing on the middle back and rhomboids for thickness.", m: "Cable Row Station", steps: ["Feet on platforms", "Neutral spine", "Pull handles to belly", "Squeeze shoulder blades"] },
+                        { n: "Deadlift", s: "3 x 8-12", v: "op9kVnSso6Q", d: "King of compound movements. Hits the entire posterior chain.", m: "Barbell & Plates", steps: ["Feet mid-bar", "Hinge and grip", "Drive through legs", "Full lockout at top"] },
+                        { n: "Barbell Bent Over Row", s: "3 x 8-12", v: "6TSz5asNQmA", d: "A powerful free-weight movement for overall back thickness.", m: "Barbell", steps: ["Hinge at 45 degrees", "Pull bar to lower rib", "Keep elbows tucked", "Lower with control"] }
+                    ]
+                },
+                {
+                    name: "Biceps",
+                    exs: [
+                        { n: "Dumbbell Bicep Curl", s: "3 x 8-12", v: "ykJmrZ5v0BA", d: "Isolation exercise for the biceps brachii.", m: "Dumbbells", steps: ["Stand straight", "Curl weight to shoulder", "No swinging", "Full stretch at bottom"] },
+                        { n: "Close Grip EZ Bar Curl", s: "3 x 8-12", v: "JpX77u973tA", d: "Targets the long head of the bicep for better 'peak'.", m: "EZ Curl Bar", steps: ["Inner grip on bar", "Elbows locked at sides", "Curl up and squeeze", "Slow descent"] },
+                        { n: "EZ Bar Preacher Curl", s: "3 x 8-12", v: "fIWP-FRFNU0", d: "Eliminates momentum to purely isolate the bicep.", m: "Preacher Bench & EZ Bar", steps: ["Chest against pad", "Arms extended", "Curl toward forehead", "Don't hyperextend at bottom"] }
+                    ]
+                },
+                {
+                    name: "Abs",
+                    exs: [
+                        { n: "Abs: Weighted Crunches", s: "10-20 Reps", v: "X-N_oJd8F9A", d: "Core isolation with added resistance for muscle growth.", m: "Cable or Dumbbell", steps: ["Lying or kneeling", "Curl torso forward", "Focus on contraction", "Slow release"] },
+                        { n: "Abs: Reverse Crunches", s: "10-20 Reps", v: "hyv14e2QDq0", d: "Targets the lower abdominal region.", m: "Flat Bench or Floor", steps: ["Hands behind head", "Bring knees to chest", "Lift hips off floor", "Slowly lower legs"] }
+                    ]
+                }
+            ]
+        },
+        {
+            day: "Chest & Triceps",
+            focus: "Pectoral Mass & Symmetry",
+            groups: [
+                {
+                    name: "Chest",
+                    exs: [
+                        { n: "Flat Barbell Bench Press", s: "3 x 8-12", v: "vcBig73ojpE", d: "Fundamental chest builder for overall power and mass.", m: "Flat Bench & Barbell", steps: ["Eyes under bar", "Lower to mid-chest", "Push up vertically", "Lock elbows"] },
+                        { n: "Incline Barbell Bench Press", s: "3 x 8-12", v: "29e9ZshD5No", d: "Emphasizes the upper chest for a more complete look.", m: "Incline Bench & Barbell", steps: ["45 degree incline", "Lower to upper chest", "Press straight up", "Control the bar"] },
+                        { n: "Pec Deck Fly", s: "3 x 8-12", v: "eGjt4lk6g34", d: "Machine isolation to stretch and pump the inner chest.", m: "Pec Deck Machine", steps: ["Sit upright", "Arms slightly bent", "Bring hands together", "Slow stretch back"] }
+                    ]
+                },
+                {
+                    name: "Triceps",
+                    exs: [
+                        { n: "Bench Dips", s: "12-15 Reps", v: "0326dy_-CzM", d: "Bodyweight or weighted move for the lateral head.", m: "Parallel Benches", steps: ["Hands on bench edge", "Lower hips to floor", "Push up using triceps", "Keep back close to bench"] },
+                        { n: "Pulley Tricep Pushdown", s: "3 x 8-12", v: "6FzKu278_dM", d: "Constant tension for the triceps using a cable.", m: "Cable Machine", steps: ["Grip bar or rope", "Elbows at sides", "Push down fully", "Release slowly"] },
+                        { n: "Bent Over Kickback", s: "3 x 8-12", v: "6SS6K3lY_No", d: "Isolation move for the long head of the tricep.", m: "Dumbbells", steps: ["Leaning forward", "Arm parallel to floor", "Extend forearm back", "Squeeze at top"] }
+                    ]
+                }
+            ]
+        },
+        {
+            day: "Legs & Shoulders",
+            focus: "Foundation & V-Taper",
+            groups: [
+                {
+                    name: "Legs",
+                    exs: [
+                        { n: "Barbell Squat", s: "3 x 8-12", v: "bEv60TRIv_U", d: "The ultimate leg exercise for quads, glutes, and core.", m: "Squat Rack & Barbell", steps: ["Bar on traps", "Hinge hips back", "Lower to parallel", "Drive through heels"] },
+                        { n: "Leg Press", s: "3 x 8-12", v: "IZxyjW7MPJQ", d: "High volume leg development with reduced spinal load.", m: "Leg Press Machine", steps: ["Feet shoulder width", "Lower slowly", "Push through platform", "Don't lock knees"] },
+                        { n: "Leg Extension", s: "3 x 8-12", v: "m0O_nC_nByk", d: "Isolation for the quadriceps to define the thigh.", m: "Leg Extension Machine", steps: ["Back against seat", "Feet under pads", "Extend legs fully", "Hold the peak"] },
+                        { n: "Lying Leg Curl", s: "3 x 8-12", v: "n5MocUHO6Yg", d: "Isolates the hamstrings for balanced leg strength.", m: "Hamstring Curl Machine", steps: ["Lie face down", "Curl pads to glutes", "Control the descent", "Keep hips flat"] }
+                    ]
+                },
+                {
+                    name: "Shoulders",
+                    exs: [
+                        { n: "Seated DB Shoulder Press", s: "3 x 8-12", v: "HzIiNhHhhtA", d: "Primary overhead pressing move for boulder shoulders.", m: "Dumbbells", steps: ["Sit upright", "Press weights up", "Touch DBs at top", "Lower to ear level"] },
+                        { n: "DB Shoulder Side Raise", s: "3 x 8-12", v: "3VcKaXpzqRo" , d: "Crucial for the side deltoid to create shoulder width.", m: "Dumbbells", steps: ["Slight lean forward", "Raise arms to sides", "Pinkies slightly up", "Control the drop"] },
+                        { n: "Dumbbell Shrugs", s: "3 x 8-12", v: "cA67B7U6Y_U", d: "Targets the upper trapezius for neck thickness.", m: "Dumbbells", steps: ["Weights at sides", "Shrug shoulders up", "Hold for 1 sec", "Drop slowly"] }
+                    ]
+                }
+            ]
+        }
+    ];
+
+    function render(idx) {
+        const workout = data[idx] || { day: "Rest Day", focus: "Total System Recovery", groups: [] };
+        document.getElementById('dayLabel').innerText = workout.day;
+        document.getElementById('focusArea').innerText = workout.focus;
+
+        const container = document.getElementById('feed');
+        if (workout.groups.length === 0) {
+            container.innerHTML = `<div class="rest-day"><i data-lucide="coffee" style="width: 48px; height: 48px; margin-bottom: 20px"></i><h1>Recovery Mode</h1><p>Rest and recover well today.</p></div>`;
+        } else {
+            container.innerHTML = workout.groups.map((group, gIdx) => `
+                <div class="body-part-group">
+                    <div class="group-header">${group.name}</div>
+                    ${group.exs.map((ex, eIdx) => {
+                        const id = `v5-${idx}-${gIdx}-${eIdx}`;
+                        const isDone = localStorage.getItem(id) === 'true';
+                        return `
+                        <div class="card ${isDone ? 'done' : ''}" id="card-${id}" onclick="openDetails(${idx}, ${gIdx}, ${eIdx})">
+                            <div class="card-body">
+                                <div class="ex-info">
+                                    <span class="ex-name">${ex.n}</span>
+                                    <span class="ex-sets">${ex.s}</span>
+                                </div>
+                                <div class="check-wrapper" onclick="event.stopPropagation(); toggle('${id}')"></div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `).join('');
+        }
+        
+        document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+            const btnIdxMap = [0, 1, 2, 6];
+            btn.classList.toggle('active', btnIdxMap[i] === idx);
+        });
+        
+        lucide.createIcons();
+    }
+
+    function toggle(id) {
+        const el = document.getElementById(`card-${id}`);
+        const state = el.classList.toggle('done');
+        localStorage.setItem(id, state);
+    }
+
+    function openDetails(dayIdx, gIdx, eIdx) {
+        const ex = data[dayIdx].groups[gIdx].exs[eIdx];
+        const wrapper = document.getElementById('videoWrapper');
+        const details = document.getElementById('modalDetails');
+        
+        // Dynamic thumbnails from the YouTube video
+        const exerciseImg = `https://img.youtube.com/vi/${ex.v}/maxresdefault.jpg`;
+        const fallbackImg = `https://img.youtube.com/vi/${ex.v}/hqdefault.jpg`;
+
+        wrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${ex.v}?autoplay=1" allow="autoplay" allowfullscreen></iframe>`;
+        
+        details.innerHTML = `
+            <div class="image-row">
+                <div class="img-box">
+                    <img src="${exerciseImg}" onerror="this.src='${fallbackImg}'">
+                    <div class="img-label">Exercise</div>
+                </div>
+                <div class="img-box">
+                    <img src="https://img.youtube.com/vi/${ex.v}/0.jpg">
+                    <div class="img-label">Machine</div>
+                </div>
+            </div>
+            <div class="modal-title">${ex.n}</div>
+            <p style="color:var(--accent); font-size: 0.75rem; font-weight:bold; margin-bottom:12px;">EQUIPMENT: ${ex.m || 'Standard Gear'}</p>
+            <div class="modal-desc">${ex.d || 'No description available.'}</div>
+            
+            <div class="section-label">HOW TO PERFORM</div>
+            ${(ex.steps || []).map((s, i) => `
+                <div class="step-item">
+                    <div class="step-num">${i+1}</div>
+                    <div class="step-text" style="font-size: 0.9rem">${s}</div>
+                </div>
+            `).join('')}
+        `;
+        
+        document.getElementById('videoModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        document.getElementById('videoModal').classList.remove('open');
+        document.getElementById('videoWrapper').innerHTML = '';
+        document.body.style.overflow = '';
+    }
+
+    window.onload = () => {
+        const t = new Date().getDay();
+        const map = [6, 0, 1, 2, 0, 1, 2];
+        render(map[t]);
+    };
+</script>
+
+</body>
+</html>
